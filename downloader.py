@@ -1,4 +1,5 @@
 import time
+import os
 from pytube import Playlist, YouTube
 from tkinter import *
 from tkinter import messagebox
@@ -47,10 +48,11 @@ def download():
             progress += video.title
             progress += '...\n\n'
             outText.insert('1.0', progress)
-            
-            time.sleep(1)
+
+            dirname = filedialog.askdirectory()
             stream = video.streams.get_by_itag(22)
-            stream.download()
+            time.sleep(1)
+            stream.download(dirname)
             messagebox.showinfo(title='Download concluído:', message='Download concluído com sucesso!')
 
     else:
@@ -73,7 +75,10 @@ def download():
                     progress += video.title
                     progress += '...\n\n'
                     outText.insert('1.0', progress)
-                    video.streams.first().download()
+
+                    dirname = filedialog.askdirectory()
+                    time.sleep(1)
+                    video.streams.first().download(dirname)
             messagebox.showinfo('Downloads concluídos: ', message='Downloads concluídos com sucesso!')
 
 # Botões
