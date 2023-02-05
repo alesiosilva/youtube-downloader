@@ -101,64 +101,58 @@ def on_progress(stream, chunk, bytes_remaining):
     percentLabel.configure(text=percentage_str + '%')
     percentLabel.update()
     progBar['value'] = (float(percentage))
+    progBar.update()
 
 def completed(a, b):
-    print('Completed! ')
+    print('Completed!\n')
+
+def videoDownload(url: str, dirname: str):
+    progBar['value'] = 0.0
+    time.sleep(0.3)
+
+    video = YouTube(url, on_progress_callback=on_progress, on_complete_callback=completed)
+    #mp4 = video.streams.filter(progressive=True, file_extension='mp4')
+    #outText.insert('1.0', mp4)
+    #barLoading()
+
+    stream = getStream(itag, video)
+    message = videoMessage(video, stream)
+    outText.insert('end', message)
+    outText.update()
+    stream.download(dirname)
+    
+def videoMessage(video: YouTube, stream):
+    message = '\nDownload do vídeo concluído com sucesso!\n'
+    message += 'Title: ' + stream.title
+    message += '\nFile Size: ' + str(stream.filesize/1000000)
+    message += ' MB\nLength: ' + str(video.length / 60) + ' Minutes'
+    message += '\nAuthor: ' + video.author + '\n'
+    return message
 
 def download():
     url = entry.get()
     if (isPlaylist(url)==False):
         try:
-            video = YouTube(url, on_progress_callback=on_progress, on_complete_callback=completed)
-
-            progress = '\nIniciando o download do vídeo: \n'
-            progress += video.title
-            outText.insert('1.0', progress)
-            #mp4 = video.streams.filter(progressive=True, file_extension='mp4')
-            #outText.insert('1.0', mp4)
-
             dirname=filedialog.askdirectory()
-            #barLoading()
-            stream = getStream(itag, video)
-            stream.download(dirname)
-
-            message = '\n\nDownload concluído com sucesso!\n\n'
-            message += 'Title: ' + stream.title
-            message += '\nFile Size: ' + str(stream.filesize/1000000)
-            message += ' MB\nLength: ' + str(video.length / 60) + ' Minutes'
-            message += '\nAuthor: ' + video.author
-            outText.insert('end', message)
-            messagebox.showinfo(title='Download concluído:', message=message)
+            videoDownload(url, dirname)
+            messagebox.showinfo(title='Download concluído:', message=url)
         except Exception as e:
             messagebox.showerror(title='Erro no download do vídeo: ', message=e)
     else:
         try:
             playlist = Playlist(url)
-            progress = '\nIniciando o download da Playlist:\n'
-            progress += playlist.title
-            outText.insert('1.0', progress)
+            progress = '\nIniciando o download da Playlist:\n' + playlist.title + '\n'
+            outText.insert('end', progress)
+            dirname = filedialog.askdirectory()
 
             for url in playlist.video_urls:
                 try: 
-                    video = YouTube(url)
-                    progress += '\n\n Baixando o vídeo: '
-                    progress += video.title
-                    outText.insert('1.0', progress)
-                    dirname = filedialog.askdirectory()
-                    stream = getStream(itag, video)
-                    stream.download(dirname)
-
-                    message = '\n\nDownload concluído com sucesso!\n\n'
-                    message += 'Title: ' + stream.title
-                    message += '\nFile Size: ' + str(stream.filesize/1000000)
-                    message += ' MB\nLength: ' + str(video.length / 60) + ' Minutes'
-                    message += '\nAuthor: ' + video.author
-                    outText.insert('end', message)
-                    messagebox.showinfo(title='Download concluído:', message=message)
+                    videoDownload(url, dirname)
                 except Exception as e:
                     messagebox.showerror(title='Erro no download do vídeo: ', message=e)
         except Exception as e:
             messagebox.showerror(title='Erro na URL da Playlist:', message=e)
+        messagebox.showinfo(title='Download concluído:', message=playlist.title)
 
 # Botões
 button = Button(panel2, text='Download', width=10, command=download)
