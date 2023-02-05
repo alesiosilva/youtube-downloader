@@ -104,7 +104,7 @@ def on_progress(stream, chunk, bytes_remaining):
     progBar.update()
 
 def completed(a, b):
-    print('Completed!\n')
+    print('Completed!')
 
 def videoDownload(url: str, dirname: str):
     progBar['value'] = 0.0
@@ -134,8 +134,11 @@ def download():
     if (isPlaylist(url)==False):
         try:
             dirname=filedialog.askdirectory()
-            videoDownload(url, dirname)
-            messagebox.showinfo(title='Download concluído:', message=url)
+            while(dirname):
+                videoDownload(url, dirname)              
+                messagebox.showinfo(title='Download concluído:', message=url)
+            else:
+                messagebox.showwarning(title='Download Cancelado', message='Selecione o diretório para o download')
         except Exception as e:
             messagebox.showerror(title='Erro no download do vídeo: ', message=e)
     else:
@@ -144,15 +147,18 @@ def download():
             progress = '\nIniciando o download da Playlist:\n' + playlist.title + '\n'
             outText.insert('end', progress)
             dirname = filedialog.askdirectory()
-
-            for url in playlist.video_urls:
-                try: 
-                    videoDownload(url, dirname)
-                except Exception as e:
-                    messagebox.showerror(title='Erro no download do vídeo: ', message=e)
+            while(dirname):
+                for url in playlist.video_urls:
+                    try: 
+                        videoDownload(url, dirname)
+                    except Exception as e:
+                        messagebox.showerror(title='Erro no download do vídeo: ', message=e)
+                messagebox.showinfo(title='Download concluído:', message=playlist.title)
+            else:
+                messagebox.showwarning(title='Download Cancelado', message='Selecione o diretório para o download')
+                                        
         except Exception as e:
             messagebox.showerror(title='Erro na URL da Playlist:', message=e)
-        messagebox.showinfo(title='Download concluído:', message=playlist.title)
 
 # Botões
 button = Button(panel2, text='Download', width=10, command=download)
