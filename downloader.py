@@ -1,4 +1,6 @@
+import time
 from pytube import Playlist, YouTube
+from pytube.cli import on_progress
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
@@ -43,7 +45,7 @@ stream = StringVar()
 label = Label(panel1, text='URL: ', font=('', 12))
 entry = Entry(panel1, width=80)
 audioLabel = Label(panel2, text='Áudio: ')
-videoLabel = Label(panel2, text='Vídeo: ')
+videoLabel = Label(panel2, text='Resolução do Vídeo: ')
 
 abr128 = ttk.Radiobutton(panel2, text='128kbps / mp4', variable=stream, value='140')
 abr48 = ttk.Radiobutton(panel2, text='48kbps / mp4', variable=stream, value='139')
@@ -52,7 +54,7 @@ res360 = ttk.Radiobutton(panel2, text='360p / mp4', variable=stream, value='18')
 res720 = ttk.Radiobutton(panel2, text='720p / mp4', variable=stream, value='22')
 res1080 = ttk.Radiobutton(panel2, text='1080p / mp4', variable=stream, value='137')
 
-progBar = ttk.Progressbar(panel3, orient=HORIZONTAL, length=560, mode='determinate')
+progBar = ttk.Progressbar(panel3, orient=HORIZONTAL, length=560, maximum=100, mode='determinate')
 outText = Text(panel3, width=70)
 
 label.place(x=5, y=40, height=30)
@@ -82,11 +84,18 @@ def getStream(stream: str, video: YouTube, dirname: str):
     else:
         return video.streams.last().download(dirname)
 
+def barLoading():
+    progBar['value'] = 0
+    for i in range(10):
+        time.sleep(0.5)
+        progBar['value'] += 10
+        jan.update_idletasks()
+
 def download():
     url = entry.get()
     if (validatePlaylist(url)==False):
         try:
-            video = YouTube(url)
+            video = YouTube(url, on_progress_callback=on_progress)
         except Exception as e:
             messagebox.showerror(title='Erro na URL do vídeo: ', message=e)
         else:
@@ -96,7 +105,9 @@ def download():
 
             #mp4 = video.streams.filter(progressive=True, file_extension='mp4')
             #outText.insert('1.0', mp4)
-            getStream(stream, video, dirname=filedialog.askdirectory())
+            dirname=filedialog.askdirectory()
+            barLoading()
+            getStream(stream, video, dirname)
             messagebox.showinfo(title='Download concluído:', message='Download concluído com sucesso!')
 
     else:
@@ -118,9 +129,10 @@ def download():
                     progress += '\n\n Baixando o vídeo: '
                     progress += video.title
                     outText.insert('1.0', progress)
+                    dirname = filedialog.askdirectory()
+                    barLoading()
+                    getStream(stream, video, dirname)
 
-                    getStream(stream, video, dirname = filedialog.askdirectory())
-                    
             messagebox.showinfo('Downloads concluídos: ', message='Downloads concluídos com sucesso!')
 
 # Botões
