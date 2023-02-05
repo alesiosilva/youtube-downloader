@@ -46,6 +46,7 @@ label = Label(panel1, text='URL: ', font=('', 12))
 entry = Entry(panel1, width=80)
 audioLabel = Label(panel2, text='Áudio: ')
 videoLabel = Label(panel2, text='Resolução do Vídeo: ')
+percentLabel = Label(panel3, text='0%')
 
 abr128 = ttk.Radiobutton(panel2, text='128kbps / mp4', variable=itag, value='140')
 abr48 = ttk.Radiobutton(panel2, text='48kbps / mp4', variable=itag, value='139')
@@ -59,8 +60,9 @@ outText = Text(panel3, width=70)
 
 label.place(x=5, y=40, height=30)
 entry.place(x=80, y=40, height=30)
-outText.place(x=5, y=60, height=220)
-progBar.place(x=5, y=20, height=20)
+percentLabel.place(x=5, y=20, height=20)
+progBar.place(x=5, y=40, height=20)
+outText.place(x=5, y=70, height=225)
 #audioLabel.place(x=5, y=20)
 #abr128.place(x=5, y=60)
 #abr48.place(x=5, y=80)
@@ -91,6 +93,15 @@ def barLoading():
         progBar['value'] += 10
         jan.update_idletasks()
 
+def on_progress(stream, chunk, bytes_remaining):
+    total_size = stream.filesize
+    bytes_downloaded = total_size - bytes_remaining
+    percentage = bytes_downloaded / total_size * 100
+    percentage_str = str(int(percentage))
+    percentLabel.configure(text=percentage_str + '%')
+    percentLabel.update()
+    progBar['value'] = (float(percentage))
+
 def completed(a, b):
     print('Completed! ')
 
@@ -111,11 +122,12 @@ def download():
             stream = getStream(itag, video)
             stream.download(dirname)
 
-            message = 'Download concluído com sucesso!\n'
+            message = '\n\nDownload concluído com sucesso!\n\n'
+            message += 'Title: ' + stream.title
             message += '\nFile Size: ' + str(stream.filesize/1000000)
-            message += 'MB\nTitle: ' + stream.title
+            message += ' MB\nLength: ' + str(video.length / 60) + ' Minutes'
             message += '\nAuthor: ' + video.author
-            message += '\nLength: ' + str(video.length) + 'Seconds'
+            outText.insert('end', message)
             messagebox.showinfo(title='Download concluído:', message=message)
         except Exception as e:
             messagebox.showerror(title='Erro no download do vídeo: ', message=e)
@@ -136,11 +148,12 @@ def download():
                     stream = getStream(itag, video)
                     stream.download(dirname)
 
-                    message = 'Download concluído com sucesso!\n'
+                    message = '\n\nDownload concluído com sucesso!\n\n'
+                    message += 'Title: ' + stream.title
                     message += '\nFile Size: ' + str(stream.filesize/1000000)
-                    message += 'MB\nTitle: ' + stream.title
+                    message += ' MB\nLength: ' + str(video.length / 60) + ' Minutes'
                     message += '\nAuthor: ' + video.author
-                    message += '\nLength: ' + str(video.length) + 'Seconds'
+                    outText.insert('end', message)
                     messagebox.showinfo(title='Download concluído:', message=message)
                 except Exception as e:
                     messagebox.showerror(title='Erro no download do vídeo: ', message=e)
