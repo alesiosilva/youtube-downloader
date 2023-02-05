@@ -40,19 +40,19 @@ panel3.place(x=5, y=275)
 # Campos
 
 entry = StringVar()
-stream = StringVar()
+itag = StringVar()
 
 label = Label(panel1, text='URL: ', font=('', 12))
 entry = Entry(panel1, width=80)
 audioLabel = Label(panel2, text='Áudio: ')
 videoLabel = Label(panel2, text='Resolução do Vídeo: ')
 
-abr128 = ttk.Radiobutton(panel2, text='128kbps / mp4', variable=stream, value='140')
-abr48 = ttk.Radiobutton(panel2, text='48kbps / mp4', variable=stream, value='139')
-res144 = ttk.Radiobutton(panel2, text='144p / mp4', variable=stream, value='160')
-res360 = ttk.Radiobutton(panel2, text='360p / mp4', variable=stream, value='18')
-res720 = ttk.Radiobutton(panel2, text='720p / mp4', variable=stream, value='22')
-res1080 = ttk.Radiobutton(panel2, text='1080p / mp4', variable=stream, value='137')
+abr128 = ttk.Radiobutton(panel2, text='128kbps / mp4', variable=itag, value='140')
+abr48 = ttk.Radiobutton(panel2, text='48kbps / mp4', variable=itag, value='139')
+res144 = ttk.Radiobutton(panel2, text='144p / mp4', variable=itag, value='160')
+res360 = ttk.Radiobutton(panel2, text='360p / mp4', variable=itag, value='18')
+res720 = ttk.Radiobutton(panel2, text='720p / mp4', variable=itag, value='22')
+res1080 = ttk.Radiobutton(panel2, text='1080p / mp4', variable=itag, value='137')
 
 progBar = ttk.Progressbar(panel3, orient=HORIZONTAL, length=560, maximum=100, mode='determinate')
 outText = Text(panel3, width=70)
@@ -74,15 +74,15 @@ res720.place(x=5, y=80)
 
 # Funções
 
-def validatePlaylist(url):
+def isPlaylist(url):
     return url.__contains__('&list=')
 
-def getStream(stream: str, video: YouTube, dirname: str):
-    itag = stream.get()
+def getStream(filtered_stream: str, video: YouTube):
+    itag = filtered_stream.get()
     if itag:
-        return video.streams.get_by_itag(itag).download(dirname)
+        return video.streams.get_by_itag(itag)
     else:
-        return video.streams.last().download(dirname)
+        return video.streams.get_highest_resolution()
 
 def barLoading():
     progBar['value'] = 0
@@ -91,31 +91,37 @@ def barLoading():
         progBar['value'] += 10
         jan.update_idletasks()
 
+def completed(a, b):
+    print('Completed! ')
+
 def download():
     url = entry.get()
-    if (validatePlaylist(url)==False):
+    if (isPlaylist(url)==False):
         try:
-            video = YouTube(url, on_progress_callback=on_progress)
-        except Exception as e:
-            messagebox.showerror(title='Erro na URL do vídeo: ', message=e)
-        else:
-            progress = '\n Iniciando o download do vídeo: \n'
+            video = YouTube(url, on_progress_callback=on_progress, on_complete_callback=completed)
+
+            progress = '\nIniciando o download do vídeo: \n'
             progress += video.title
             outText.insert('1.0', progress)
-
             #mp4 = video.streams.filter(progressive=True, file_extension='mp4')
             #outText.insert('1.0', mp4)
-            dirname=filedialog.askdirectory()
-            barLoading()
-            getStream(stream, video, dirname)
-            messagebox.showinfo(title='Download concluído:', message='Download concluído com sucesso!')
 
+            dirname=filedialog.askdirectory()
+            #barLoading()
+            stream = getStream(itag, video)
+            stream.download(dirname)
+
+            message = 'Download concluído com sucesso!\n'
+            message += '\nFile Size: ' + str(stream.filesize/1000000)
+            message += 'MB\nTitle: ' + stream.title
+            message += '\nAuthor: ' + video.author
+            message += '\nLength: ' + str(video.length) + 'Seconds'
+            messagebox.showinfo(title='Download concluído:', message=message)
+        except Exception as e:
+            messagebox.showerror(title='Erro no download do vídeo: ', message=e)
     else:
         try:
             playlist = Playlist(url)
-        except Exception as e:
-            messagebox.showerror(title='Erro na URL da Playlist:', message=e)
-        else:
             progress = '\nIniciando o download da Playlist:\n'
             progress += playlist.title
             outText.insert('1.0', progress)
@@ -123,17 +129,23 @@ def download():
             for url in playlist.video_urls:
                 try: 
                     video = YouTube(url)
-                except Exception as e:
-                    messagebox.showerror(title='Erro no download do vídeo: ', message=e)
-                else:
                     progress += '\n\n Baixando o vídeo: '
                     progress += video.title
                     outText.insert('1.0', progress)
                     dirname = filedialog.askdirectory()
-                    barLoading()
-                    getStream(stream, video, dirname)
+                    stream = getStream(itag, video)
+                    stream.download(dirname)
 
-            messagebox.showinfo('Downloads concluídos: ', message='Downloads concluídos com sucesso!')
+                    message = 'Download concluído com sucesso!\n'
+                    message += '\nFile Size: ' + str(stream.filesize/1000000)
+                    message += 'MB\nTitle: ' + stream.title
+                    message += '\nAuthor: ' + video.author
+                    message += '\nLength: ' + str(video.length) + 'Seconds'
+                    messagebox.showinfo(title='Download concluído:', message=message)
+                except Exception as e:
+                    messagebox.showerror(title='Erro no download do vídeo: ', message=e)
+        except Exception as e:
+            messagebox.showerror(title='Erro na URL da Playlist:', message=e)
 
 # Botões
 button = Button(panel2, text='Download', width=10, command=download)
