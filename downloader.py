@@ -122,7 +122,7 @@ def videoDownload(url: str, dirname: str):
     stream.download(dirname)
     
 def videoMessage(video: YouTube, stream):
-    message = '\nDownload do vídeo concluído com sucesso!\n'
+    message = '\nEfetuando download do vídeo!\n'
     message += 'Title: ' + stream.title
     message += '\nFile Size: ' + str(stream.filesize/1000000)
     message += ' MB\nLength: ' + str(video.length / 60) + ' Minutes'
@@ -135,7 +135,7 @@ def download():
         try:
             dirname=filedialog.askdirectory()
             if(dirname):
-                videoDownload(url, dirname)              
+                videoDownload(url, dirname)
                 messagebox.showinfo(title='Download concluído:', message=url)
             else:
                 messagebox.showwarning(title='Download Cancelado', message='Selecione o diretório para o download')
