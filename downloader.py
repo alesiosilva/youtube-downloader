@@ -134,7 +134,7 @@ def download():
     if (isPlaylist(url)==False):
         try:
             dirname=filedialog.askdirectory()
-            while(dirname):
+            if(dirname):
                 videoDownload(url, dirname)              
                 messagebox.showinfo(title='Download concluído:', message=url)
             else:
@@ -147,7 +147,7 @@ def download():
             progress = '\nIniciando o download da Playlist:\n' + playlist.title + '\n'
             outText.insert('end', progress)
             dirname = filedialog.askdirectory()
-            while(dirname):
+            if(dirname):
                 for url in playlist.video_urls:
                     try: 
                         videoDownload(url, dirname)
